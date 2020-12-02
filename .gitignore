@@ -2,6 +2,7 @@
 node_modules
 /dist
 config.js
+playlist.xml
 
 # local env files
 .env.local

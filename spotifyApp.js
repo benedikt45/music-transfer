@@ -115,9 +115,9 @@ class Spotify {
     }
   }
 
-  async addTrackListToPlaylist(trackList) {
+  async addTracksToPlaylistByUris(trackList) {
     try {
-      await axios.post(`https://api.spotify.com/v1/playlists/${this.playlistId}/tracks?uris=${trackList.join(',')}`,
+      await axios.post(`https://api.spotify.com/v1/playlists/${this.playlistId}/tracks?uris=${trackList}`,
           null,
           {
             headers: {
