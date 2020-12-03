@@ -1,5 +1,4 @@
 const axios = require('axios');
-const fs = require('fs');
 
 class Spotify {
   userId
@@ -86,7 +85,7 @@ class Spotify {
             }
           })
       for (let track of result.data.tracks.items) {
-        list.push(track.uri)
+        list.push(track.track.uri)
       }
       return list
     } catch (err) {
@@ -94,7 +93,7 @@ class Spotify {
     }
   }
 
-  async findTrack(trackName, artistName) {
+  async findTrack(trackName, artistName, followArtist = false) {
     let encodedTrackName = encodeURIComponent(trackName)
     try {
       const result = await axios.get(`https://api.spotify.com/v1/search?q=${encodedTrackName}&type=track&limit=20`, {
@@ -105,7 +104,12 @@ class Spotify {
       for (let track of result.data.tracks.items) {
         for (let artist of track.artists) {
           if (artist.name === artistName) {
-            return track.uri
+            if (followArtist) {
+              if (!await this.checkIfArtistAlreadyFollowed(artist.id)) {
+                await this.followArtistByUri(artist.id)
+              }
+            }
+            return {'uri': track.uri, 'id': track.id}
           }
         }
       }
@@ -115,9 +119,51 @@ class Spotify {
     }
   }
 
-  async addTracksToPlaylistByUris(trackList) {
+  async addTracksToPlaylistByUri(trackUri) {
     try {
-      await axios.post(`https://api.spotify.com/v1/playlists/${this.playlistId}/tracks?uris=${trackList}`,
+      await axios.post(`https://api.spotify.com/v1/playlists/${this.playlistId}/tracks?uris=${trackUri}`,
+          null,
+          {
+            headers: {
+              'Authorization': `Bearer ${this.accessToken}`
+            }
+          })
+    } catch (err) {
+      throw err
+    }
+  }
+
+  async followArtistByUri(artistUri) {
+    try {
+      await axios.post(`https://api.spotify.com/v1/me/following?type=artist&ids=${artistUri}`,
+          null,
+          {
+            headers: {
+              'Authorization': `Bearer ${this.accessToken}`
+            }
+          })
+    } catch (err) {
+      throw err
+    }
+  }
+
+  async checkIfArtistAlreadyFollowed(artistUri) {
+    try {
+      const result = await axios.get(`https://api.spotify.com/v1/me/following/contains?type=artist&ids=${artistUri}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${this.accessToken}`
+            }
+          })
+      return result.data[0]
+    } catch (err) {
+      throw err
+    }
+  }
+
+  async addTrackToFavorite(trackId) {
+    try {
+      await axios.put(`https://api.spotify.com/v1/me/tracks?ids=${trackId}`,
           null,
           {
             headers: {
