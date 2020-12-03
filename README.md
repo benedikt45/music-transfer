@@ -1,2 +1,2 @@
 # music-transfer
-Transfer music to Spotify
+Transfer music from Apple music to Spotify
